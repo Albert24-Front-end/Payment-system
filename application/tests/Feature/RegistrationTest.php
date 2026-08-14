@@ -64,6 +64,7 @@ class RegistrationTest extends TestCase
 
         $resp = $this->post('/api/auth/register', [
             "email" => Str::upper($user->email),
+            "password" => "123456"
         ]);
         $resp->assertStatus(422);
     }
