@@ -13,6 +13,9 @@ Route::prefix("/auth")
         Route::post("/register", [AuthController::class, "register"])
             ->name("register")
             ->middleware(["throttle:reg"]);
+        Route::post("/login", [AuthController::class, "login"])
+            ->name("login")
+            ->middleware(["throttle:login"]);
     });
 
 Route::get('/user', function (Request $request) {
