@@ -39,4 +39,12 @@ class AuthService
         Cache::put("mail-$code", $user->email, now()->addHour());
         Mail::to($user)->send(new EmailVerification($code));
     }
+
+    public function verifyEmail(string $code): void
+    {
+        $email = Cache::get("mail-$code");
+        $user = User::where('email', $email)->firstOrFail();
+        $user->email_verified_at = now();
+        $user->save();
+    }
 }

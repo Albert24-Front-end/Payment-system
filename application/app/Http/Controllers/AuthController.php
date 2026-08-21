@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Data\Auth\LoginData;
 use App\Data\Auth\RegistrationData;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\VerificationCodeRequest;
 use App\Http\Requests\AuthRegistration;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
@@ -27,5 +28,11 @@ class AuthController extends Controller
                 "email" => "invalid credentials",
             ]);
         }
+    }
+
+    public function verifyEmail(VerificationCodeRequest $request, AuthService $authService)
+    {
+        $authService->verifyEmail($request->code);
+        return ["success" => true];
     }
 }

@@ -42,4 +42,30 @@ class EmailVerificationTest extends TestCase
             return true;
         });
     }
+
+    public function testSuccessVerification()
+    {
+        $user = User::factory()->unverified()->create();
+        Cache::put("mail-" . self::FAKE_RANDOM_STRING, $user->email);
+
+        $resp = $this->post("/api/auth/verify", [
+            "code" => self::FAKE_RANDOM_STRING,
+        ]);
+        $resp->assertStatus(200);
+        $user->refresh();
+        $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function testInvalidVerificationCode()
+    {
+        $resp = $this->post("/api/auth/verify", [
+            "code" => "",
+        ]);
+        $resp->assertStatus(422);
+
+        $resp = $this->post("/api/auth/verify", [
+            "code" => "Some Code"
+        ]);
+        $resp->assertStatus(422);
+    }
 }
