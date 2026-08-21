@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Data\Auth\RegistrationData;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 
 class AuthRegistration extends FormRequest
 {
@@ -12,7 +14,14 @@ class AuthRegistration extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => Str::lower($this->email),
+        ]);
     }
 
     /**
@@ -23,7 +32,13 @@ class AuthRegistration extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "email" => "required|email|unique:users,email",
+            "password" => "required",
         ];
+    }
+
+    public function toDTO(): RegistrationData
+    {
+        return new RegistrationData(...$this->all());
     }
 }

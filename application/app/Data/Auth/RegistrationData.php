@@ -2,7 +2,13 @@
 
 namespace App\Data\Auth;
 
-class RegistrationData
+readonly class RegistrationData
 {
+    public function __construct(
+        public string $email,
+        public string $password,
+    )
+    {
 
+    }
 }
