@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\AuditLogContract;
+use App\Services\OwnDBAuditLogService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AuditLogContract::class, function ($app) {
+            return new OwnDBAuditLogService();
+        });
     }
 
     /**

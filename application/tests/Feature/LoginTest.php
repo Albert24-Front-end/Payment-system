@@ -6,10 +6,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\WithAuditLogs;
 
 class LoginTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, WithAuditLogs;
     public function testSuccessfulLogin()
     {
         $user = User::factory()->create();
@@ -19,6 +20,7 @@ class LoginTest extends TestCase
         ]);
         $response->assertStatus(200);
         $response->assertJsonStructure(["token"]);
+        $this->assertLog("logged-in", $user->id);
     }
 
     public function testEmptyFields()
