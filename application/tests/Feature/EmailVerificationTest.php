@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
+use Tests\Traits\WithAuditLogs;
 
 class EmailVerificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithAuditLogs;
 
     const FAKE_RANDOM_STRING = 'fake-random-string';
 
@@ -41,6 +42,7 @@ class EmailVerificationTest extends TestCase
             $mail->assertSeeInHtml(self::FAKE_RANDOM_STRING);
             return true;
         });
+        $this->assertLog("verification-code-sent", $user->id, parameters: ["email" => $user->email]);
     }
 
     public function testSuccessVerification()
