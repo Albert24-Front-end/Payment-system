@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Data\Auth;
-// DTO pattern - Data Transfer Object
-readonly class RegistrationData
+
+readonly class LoginData
 {
     public function __construct(
         public string $email,

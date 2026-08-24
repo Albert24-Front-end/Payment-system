@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for("reg", function (Request $request) {
             return Limit::perMinutes(30, 10)->by($request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinutes(30, 3)
+                ->by($request->email ?: $request->ip())
+                ->after(function (Response $response) {
+                    return $response->status() === 422;
+                });
         });
     }
 }

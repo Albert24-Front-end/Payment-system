@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\Auth\LoginData;
 use App\Data\Auth\RegistrationData;
 use App\Models\User;
 
@@ -9,7 +10,7 @@ class AuthentificationService
 {
     public function register(RegistrationData $data): User
     {
-        $user = User::factory()->create([
+        $user = User::create([
             'email' => $data->email,
             'password' => $data->password,
         ]);
@@ -17,8 +18,14 @@ class AuthentificationService
 
     }
 
-//    public function login(LoginData $data): User
-//    {
-//
-//    }
+    public function login(LoginData $data): array
+    {
+        $user = User::where('email', $data->email)->firstOrFail();
+        $user->checkPassword($data->password);
+        $token = $user->createToken('login-token');
+        return [
+            'token' => $token->plainTextToken,
+        ];
+
+    }
 }
