@@ -4,7 +4,12 @@ namespace App\Services;
 
 use App\Data\Auth\LoginData;
 use App\Data\Auth\RegistrationData;
+use App\Mail\EmailVerification;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthentificationService
 {
@@ -14,8 +19,8 @@ class AuthentificationService
             'email' => $data->email,
             'password' => $data->password,
         ]);
+        event(new Registered($user));
         return $user;
-
     }
 
     public function login(LoginData $data): array
@@ -26,6 +31,14 @@ class AuthentificationService
         return [
             'token' => $token->plainTextToken,
         ];
+    }
 
+    public function sendVerificationEmail(User $user): void
+    {
+        $code = Str::random(6);
+        Cache::put("mail-$code", $user->email, now()->addHour());
+//        $user->sendEmailVerificationNotification();
+        // отправка email
+        Mail::to($user)->send(new EmailVerification($code));
     }
 }

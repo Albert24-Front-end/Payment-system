@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
@@ -19,6 +20,7 @@ class RegistrationTest extends TestCase
 
     public function testSuccessfulRegistration(): void
     {
+        \Event::fake(); // Слушатели не вызываются, изолируем тест от других тем самым
         $email = $this->faker->email();
         $password = "123456";
         $response = $this->post('/api/auth/register', [
@@ -31,6 +33,7 @@ class RegistrationTest extends TestCase
         $user = User::where('email', $email)->first();
         $this->assertTrue(\Hash::check($password, $user->password));
         $this->assertEquals(Str::lower($email), $user->email);
+        \Event::assertDispatched(Registered::class);
     }
 
     public function testInvalidRegistrationData(): void
