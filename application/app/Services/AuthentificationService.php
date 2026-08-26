@@ -19,7 +19,7 @@ class AuthentificationService
             'email' => $data->email,
             'password' => $data->password,
         ]);
-        event(new Registered($user));
+        event(new Registered($user)); // event dispatcher
         return $user;
     }
 
@@ -37,8 +37,15 @@ class AuthentificationService
     {
         $code = Str::random(6);
         Cache::put("mail-$code", $user->email, now()->addHour());
-//        $user->sendEmailVerificationNotification();
         // отправка email
         Mail::to($user)->send(new EmailVerification($code));
+    }
+
+    public function verifyEmail(string $code): void
+    {
+        $email = Cache::get("mail-$code");
+        $user = User::where('email', $email)->firstOrFail();
+        $user->email_verified_at = now();
+        $user->save();
     }
 }

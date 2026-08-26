@@ -10,6 +10,7 @@ Route::get('/health', HealthController::class);
 Route::prefix('/auth')->as('auth.')->group(function () {
     Route::post('/register', [AuthentificationController::class, 'register'])->name('register')->middleware(['throttle:reg']);
     Route::post('/login', [AuthentificationController::class, 'login'])->name('login')->middleware(['throttle:login']);
+    Route::post('/verify', [AuthentificationController::class, 'verifyEmail'])->name('verify');
 });
 
 Route::get('/user', function (Request $request) {

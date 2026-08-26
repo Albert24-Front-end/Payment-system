@@ -21,8 +21,8 @@ class EmailVerificationTest extends TestCase
 
     public function testHasListeners()
     {
-        \Event::fake();
-        \Event::assertListening(Registered::class, \App\Listeners\SendVerificationEmail::class);
+        \Event::fake(); // слушатели не выполняются, вместо этого Laravel записывает, какое событие отправлено
+        \Event::assertListening(Registered::class, \App\Listeners\SendVerificationEmail::class); // проверяем, Registration действительно породила событие Registered
     }
 
     // Listener testing
@@ -30,8 +30,8 @@ class EmailVerificationTest extends TestCase
     {
         Str::createRandomStringsUsing(function () {
             return self::FAKE_RANDOM_STRING;
-        });
-        $listener = app(SendVerificationEmail::class); // app() imports all dependencies from Laravel
+        }); // создали контролируемую "случайную" строку для проведения теста
+        $listener = app(SendVerificationEmail::class); // app() imports all dependencies from Laravel and makes dependency resolution through container
         $user = User::factory()->create();
         Mail::fake(); // Письма не отправляются во время теста
         $listener->handle(new Registered($user));
@@ -43,5 +43,31 @@ class EmailVerificationTest extends TestCase
             $mail->assertSeeInHtml(self::FAKE_RANDOM_STRING);
             return true;
         });
+    }
+
+    public function testSuccessfulVerification(): void
+    {
+        $user = User::factory()->unverified()->create();
+        Cache::put("mail-" . self::FAKE_RANDOM_STRING, $user->email);
+
+        $resp = $this->post('/api/auth/verify', [
+            'code' => self::FAKE_RANDOM_STRING,
+        ]);
+        $resp->assertStatus(200);
+        $user->refresh();
+        $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function testInvalidVerificationCode(): void
+    {
+        $resp = $this->post('/api/auth/verify', [
+            'code' => '',
+        ]);
+        $resp->assertStatus(422);
+
+        $resp = $this->post('/api/auth/verify', [
+            'code' => 'Some code',
+        ]);
+        $resp->assertStatus(422);
     }
 }
