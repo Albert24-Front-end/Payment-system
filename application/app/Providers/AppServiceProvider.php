@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\AuditLogContract;
+use App\Services\OwnDBAuditLogService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,8 +17,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
-    }
+        $this->app->singleton(AuditLogContract::class, function ($app) {
+            return new OwnDBAuditLogService(); // у одного контракта может быть много реализаций в виде сервисов.
+            // Эти сервисы можно менять в зав-ти от ситуации
+        });
+    } // в методе register файла Service Provider связываются абстракции и их конкретные реализации
 
     /**
      * Bootstrap any application services.
@@ -34,5 +39,5 @@ class AppServiceProvider extends ServiceProvider
                     return $response->status() === 422;
                 });
         });
-    }
+    } // в методе boot выполняется другой функционал при старте приложения
 }

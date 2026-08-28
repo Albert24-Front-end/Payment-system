@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\AuditLogContract;
 use App\Data\Auth\LoginData;
 use App\Data\Auth\RegistrationData;
 use App\Mail\EmailVerification;
@@ -13,6 +14,12 @@ use Illuminate\Support\Str;
 
 class AuthentificationService
 {
+    public function __construct(
+        readonly private AuditLogContract $auditService
+    )
+    {
+    }
+
     public function register(RegistrationData $data): User
     {
         $user = User::create([
@@ -20,6 +27,7 @@ class AuthentificationService
             'password' => $data->password,
         ]);
         event(new Registered($user)); // event dispatcher
+        $this->auditService->log('user_registration', $user->id);
         return $user;
     }
 
@@ -28,6 +36,7 @@ class AuthentificationService
         $user = User::where('email', $data->email)->firstOrFail();
         $user->checkPassword($data->password);
         $token = $user->createToken('login-token');
+        $this->auditService->log('user_login', $user->id);
         return [
             'token' => $token->plainTextToken,
         ];
@@ -39,6 +48,7 @@ class AuthentificationService
         Cache::put("mail-$code", $user->email, now()->addHour());
         // отправка email
         Mail::to($user)->send(new EmailVerification($code));
+        $this->auditService->log('verification_code_sent', $user->id, parameters: ['email' => $user->email]);
     }
 
     public function verifyEmail(string $code): void

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\WithAuditLogs;
 
 class LoginTest extends TestCase
 {
@@ -13,7 +14,7 @@ class LoginTest extends TestCase
      * A basic feature test example.
      */
 
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, WithAuditLogs;
     public function testSuccessfulLogin(): void
     {
         $user = User::factory()->create();
@@ -23,6 +24,7 @@ class LoginTest extends TestCase
         ]);
         $response->assertStatus(200);
         $response->assertJsonStructure(['token']);
+        $this->assertLog("user_login", $user->id);
     }
 
     public function testEmptyFields(): void
