@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // регистрация зависимости в Service Container. Здесь главный смысл абстракции
         $this->app->singleton(AuditLogContract::class, function ($app) {
             return new OwnDBAuditLogService(); // у одного контракта может быть много реализаций в виде сервисов.
             // Эти сервисы можно менять в зав-ти от ситуации

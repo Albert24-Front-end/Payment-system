@@ -6,6 +6,7 @@ use App\Contracts\AuditLogContract;
 use Tests\TestCase;
 use Tests\Traits\WithAuditLogs;
 
+// проверяет, что интерфейс можно использовать через Service Container и проверять вызовы без БД.
 class WithAuditLogsTraitTest extends TestCase
 {
     use WithAuditLogs;

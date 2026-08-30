@@ -58,6 +58,7 @@ class EmailVerificationTest extends TestCase
         $resp->assertStatus(200);
         $user->refresh();
         $this->assertNotNull($user->email_verified_at);
+        $this->assertLog("email_verified", $user->id, parameters: ['email' => $user->email]);
     }
 
     public function testInvalidVerificationCode(): void

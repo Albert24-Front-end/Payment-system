@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 class AuthentificationService
 {
     public function __construct(
-        readonly private AuditLogContract $auditService
+        // Dependency Inversion Principle из SOLID
+        readonly private AuditLogContract $auditService // за абстракцией скрывается конкретная ее реализация - ее-то и берет Auth Service, не зная, как работает Audit Log с БД
     )
     {
     }
@@ -57,5 +58,6 @@ class AuthentificationService
         $user = User::where('email', $email)->firstOrFail();
         $user->email_verified_at = now();
         $user->save();
+        $this->auditService->log('email_verified', $user->id, parameters: ['email' => $user->email]);
     }
 }
