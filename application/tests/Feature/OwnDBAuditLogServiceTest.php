@@ -12,6 +12,7 @@ class OwnDBAuditLogServiceTest extends TestCase
     use RefreshDatabase;
     public function testLog(): void
     {
+        // тест именно конкретной реализации - OwnDBAuditLogService
         $log = new OwnDBAuditLogService();
         $log->log("test", 10, 10, 10, "descr", ["a" => "b"]);
 
@@ -24,6 +25,7 @@ class OwnDBAuditLogServiceTest extends TestCase
             "parameters" => $this->castAsJson(["a" => "b"])
         ]);
 
+        // проверяем, что метод нормально работает с неполным набором аргументов
         $log->log("some-action", 13);
         $this->assertDatabaseHas('audit_logs', [
             "action" => "some-action",

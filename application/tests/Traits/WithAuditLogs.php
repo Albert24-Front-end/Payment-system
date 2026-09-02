@@ -17,8 +17,9 @@ trait WithAuditLogs
         $this->auditLogSpy = $this->spy(AuditLogContract::class);
     }
 
-    // метод assertLog, проверяющий факт добавления AuditLog ко всем методам без его внесения в БД
+    // метод assertLog, проверяющий факт добавления AuditLog ко всем методам без его внесения в БД, а также сравниваются ожидаемые тестом и фактически переданные шпиону аргументы
     public function assertLog(
+        // аргументы, к-е ожидает тест
         string  $action,
         int|false|null    $user_id = false,
         int|false|null    $admin_id = false,
@@ -27,10 +28,11 @@ trait WithAuditLogs
         array|false  $parameters = false,
         int $times = 1,
     )
-    {   // был ли вызов метода log с параметрами из return
+    {   // был ли вызов метода log с параметрами из return, там где нужно
         $this->auditLogSpy->shouldHaveReceived('log')->withArgs(function(
+            // далее идут аргументы, к-е передали в шпиона
             string  $_action,
-            int|false|null    $_user_id = false,
+            int|false|null    $_user_id = false, // false - не проверяй этот аргумент, null означает: проверь, что аргумент действительно равен null.
             int|false|null    $_admin_id = false,
             int|false|null    $_terminal_id = false,
             false|string|null $_description = false,
@@ -38,9 +40,9 @@ trait WithAuditLogs
         ) use($action, $user_id, $admin_id, $terminal_id, $description, $parameters) {
             return
                 $action === $_action
-                && ($user_id === false ||$user_id === $_user_id)
+                && ($user_id === false || $user_id === $_user_id)
                 && ($admin_id === false || $admin_id === $_admin_id)
-                && ($terminal_id ===false || $terminal_id === $_terminal_id)
+                && ($terminal_id === false || $terminal_id === $_terminal_id)
                 && ($description === false || $description === $_description)
                 && ($parameters === false || $parameters === $_parameters);
         })->times($times);

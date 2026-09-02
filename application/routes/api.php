@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\TerminalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,3 +17,20 @@ Route::prefix('/auth')->as('auth.')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// Эти роуты вызываются только при наличии токена - работает мидлвар
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('/terminals')->as('terminal.')->group(function () {
+        Route::get("", [TerminalController::class, 'index'])->name('index');
+        Route::post("", [TerminalController::class, 'create'])->name('create');
+        Route::put("/{terminal}", [TerminalController::class, 'update'])
+            ->middleware("can:update,terminal") // проверка права редактирования кассы
+            ->name('update');
+        Route::delete("/{terminal}", [TerminalController::class, 'delete'])
+            ->middleware("can:delete,terminal") // проверка права удаления кассы
+            ->name('delete');
+        Route::get("/{terminal}/secret_key", [TerminalController::class, 'getSecretKey'])
+            ->middleware('can:viewSecretKey,terminal')
+            ->name('secret-key');
+    });
+});
