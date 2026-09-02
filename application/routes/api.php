@@ -21,6 +21,16 @@ Route::get('/user', function (Request $request) {
 // Эти роуты вызываются только при наличии токена - работает мидлвар
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('/terminals')->as('terminal.')->group(function () {
-        Route::post("", [TerminalController::class, 'create']);
+        Route::get("", [TerminalController::class, 'index'])->name('index');
+        Route::post("", [TerminalController::class, 'create'])->name('create');
+        Route::put("/{terminal}", [TerminalController::class, 'update'])
+            ->middleware("can:update,terminal") // проверка права редактирования кассы
+            ->name('update');
+        Route::delete("/{terminal}", [TerminalController::class, 'delete'])
+            ->middleware("can:delete,terminal") // проверка права удаления кассы
+            ->name('delete');
+        Route::get("/{terminal}/secret_key", [TerminalController::class, 'getSecretKey'])
+            ->middleware('can:viewSecretKey,terminal')
+            ->name('secret-key');
     });
 });

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Terminal;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -71,5 +72,76 @@ class TerminalTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(["name"]);
+    }
+
+    public function testTerminalList(): void
+    {
+        $user = User::factory()->create();
+        $terminals = Terminal::factory()->
+            count(3)->
+            state(new Sequence(["user_id" => $user->id, "created_at" => now()],
+            ["user_id" => $user->id, "created_at" => now()->subMinute()],
+            ["user_id" => $user->id, "created_at" => now()->subMinutes(3)]))->
+            create();
+
+        // чужие кассы не возвращаются нам - не отфильтрованный юзер уронит тест, т.к. для него создается новая касса
+        $otherUser = User::factory()->create();
+        Terminal::factory()->state(["user_id" => $otherUser->id])->create();
+
+        $response = $this->actingAs($user)->get("/api/terminals");
+        $response->assertOk();
+        $data = $terminals->map(function(Terminal $terminal) {
+            $terminalData = $terminal->toArray();
+            unset($terminalData["secret_key"]);
+            return $terminalData;
+        })->toArray();
+        $response->assertJson(["data" => $data]);
+        $response->assertJsonMissingPath("data.0.secret_key");
+    }
+
+    public function testUpdateTerminal(): void
+    {
+        $user = User::factory()->create();
+        $terminal = Terminal::factory()->state(["user_id" => $user->id])->create();
+        $newData = [
+            "name" => "Updated Terminal",
+            "success_url" => "https://example.com/success",
+            "fail_url" => "https://example.com/fail",
+            "webhook_url" => "https://example.com/webhook",
+        ];
+        $response = $this->actingAs($user)->put("/api/terminals/{$terminal->id}", $newData);
+        $response->assertOk();
+        $terminal->refresh();
+        $this->assertEquals("Updated Terminal", $terminal->name);
+        $this->assertEquals("https://example.com/success", $terminal->success_url);
+        $this->assertEquals("https://example.com/fail", $terminal->fail_url);
+        $this->assertEquals("https://example.com/webhook", $terminal->webhook_url);
+
+        $this->assertLog("terminal_updated", $user->id, terminal_id: $terminal->id, parameters: (array) $newData);
+
+        // запрет на редактирование чужих касс
+        $otherUser = User::factory()->create();
+        $otherTerminal = Terminal::factory()->state(["user_id" => $otherUser->id])->create();
+        $response = $this->actingAs($user)->put("/api/terminals/{$otherTerminal->id}", $newData);
+        $response->assertForbidden();
+    }
+
+    public function testDeleteTerminal(): void
+    {
+        $user = User::factory()->create();
+        $terminal = Terminal::factory()->state(["user_id" => $user->id])->create();
+
+        $response = $this->actingAs($user)->delete("/api/terminals/{$terminal->id}");
+        $response->assertOk();
+        $this->assertSoftDeleted("terminals", ["id" => $terminal->id]); // мягкое удаление
+//        $terminal->refresh();
+
+        $this->assertLog("terminal_deleted", $user->id, terminal_id: $terminal->id);
+
+        // запрет на удаление чужих касс
+        $otherUser = User::factory()->create();
+        $otherTerminal = Terminal::factory()->state(["user_id" => $otherUser->id])->create();
+        $response = $this->actingAs($user)->delete("/api/terminals/{$otherTerminal->id}");
+        $response->assertForbidden();
     }
 }

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('secret_key')->unique();
             $table->timestamps();
 
+            $table->softDeletes(); // делаем пометку - удалено, добавляется поле deleted_at
+
             $table->unique(['user_id', 'name']);
         });
     }

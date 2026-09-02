@@ -13,7 +13,7 @@ class TerminalService
 {
     public function __construct(
         // Dependency Inversion Principle из SOLID
-        readonly private AuditLogContract $terminalService
+        readonly private AuditLogContract $terminalAuditLogService
     )
     {
     }
@@ -29,6 +29,32 @@ class TerminalService
         ]);
         $terminal->secret_key = Str::random(20); // не fillable поле, к-е невозможно случайно стереть в запросах
         $terminal->save();
-        $this->terminalService->log("terminal_created", $creator->id, terminal_id: $terminal->id);
+        $this->terminalAuditLogService->log("terminal_created", $creator->id, terminal_id: $terminal->id);
+    }
+
+    public function getUserTerminals(User $user)
+    {
+        return Terminal::where("user_id", $user->id)
+            ->orderByDesc("created_at") // сортировка по убыванию даты создания - ее заранее подготовили
+            ->get()
+            ->toResourceCollection();
+    }
+
+    public function getTerminalSecretKey(Terminal $terminal)
+    {
+        return $terminal->secret_key;
+    }
+
+    public function updateTerminal(User $user, Terminal $terminal, TerminalData $terminalData)
+    {
+        $terminal->fill((array) $terminalData);
+        $terminal->save();
+        $this->terminalAuditLogService->log("terminal_updated", $user->id, terminal_id: $terminal->id, parameters: (array) $terminalData);
+    }
+
+    public function deleteTerminal(User $user, Terminal $terminal)
+    {
+        $terminal->delete();
+        $this->terminalAuditLogService->log("terminal_deleted", $user->id, terminal_id: $terminal->id);
     }
 }
