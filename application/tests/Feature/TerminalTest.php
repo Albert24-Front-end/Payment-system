@@ -52,7 +52,7 @@ class TerminalTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(["name", "success_url", "fail_url", "webhook_url"]);
 
-
+        // тест на неправильные url
         $response = $this->actingAs($user)->post("/api/terminals", [
             "name" => "some name",
             "success_url" => "not-url",
@@ -62,6 +62,7 @@ class TerminalTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(["success_url", "fail_url", "webhook_url"]);
 
+        // тест на неуникальное имя
         $terminal = Terminal::factory()->state(["user_id" => $user->id])->create();
         $response = $this->actingAs($user)->post("/api/terminals", [
             "name" => $terminal->name,
@@ -82,7 +83,7 @@ class TerminalTest extends TestCase
             state(new Sequence(["user_id" => $user->id, "created_at" => now()],
             ["user_id" => $user->id, "created_at" => now()->subMinute()],
             ["user_id" => $user->id, "created_at" => now()->subMinutes(3)]))->
-            create();
+            create(); // сортируем кассы по убыванию времени создания, самые свежие - вперед
 
         // чужие кассы не возвращаются нам - не отфильтрованный юзер уронит тест, т.к. для него создается новая касса
         $otherUser = User::factory()->create();
@@ -90,6 +91,8 @@ class TerminalTest extends TestCase
 
         $response = $this->actingAs($user)->get("/api/terminals");
         $response->assertOk();
+
+        // готовим данные в виде коллекций
         $data = $terminals->map(function(Terminal $terminal) {
             $terminalData = $terminal->toArray();
             unset($terminalData["secret_key"]);
@@ -112,6 +115,7 @@ class TerminalTest extends TestCase
         $response = $this->actingAs($user)->put("/api/terminals/{$terminal->id}", $newData);
         $response->assertOk();
         $terminal->refresh();
+        // сопоставляем данные, чтобы удостовериться в успешном редактировании
         $this->assertEquals("Updated Terminal", $terminal->name);
         $this->assertEquals("https://example.com/success", $terminal->success_url);
         $this->assertEquals("https://example.com/fail", $terminal->fail_url);

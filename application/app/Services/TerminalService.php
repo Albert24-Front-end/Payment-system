@@ -26,7 +26,7 @@ class TerminalService
             "success_url" => $terminalData->success_url,
             "fail_url" => $terminalData->fail_url,
             "webhook_url" => $terminalData->webhook_url,
-        ]);
+        ]); // массовое присваивание для fillable полей
         $terminal->secret_key = Str::random(20); // не fillable поле, к-е невозможно случайно стереть в запросах
         $terminal->save();
         $this->terminalAuditLogService->log("terminal_created", $creator->id, terminal_id: $terminal->id);
@@ -35,7 +35,7 @@ class TerminalService
     public function getUserTerminals(User $user)
     {
         return Terminal::where("user_id", $user->id)
-            ->orderByDesc("created_at") // сортировка по убыванию даты создания - ее заранее подготовили
+            ->orderByDesc("created_at") // сортировка по убыванию даты создания - ее заранее подготовили. Для PostgreSQL это необходимо, у него дефолтная сортировка кривая - по дате последнего изменения
             ->get()
             ->toResourceCollection();
     }
