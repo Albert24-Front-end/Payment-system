@@ -16,7 +16,7 @@ class TerminalCreationRequest extends FormRequest
                 "required",
                 "string",
                 "max:255",
-                Rule::unique("terminals")->where(fn(Builder $query) => $query->where("user_id", $this->user()->id)),
+                Rule::unique("terminals")->where(fn(Builder $query) => $query->where("user_id", $this->user()->id)), // правило на уникальность имени в пределах одного юзера
             ],
             "success_url" => ["required", "string", "max:255", "url"],
             "fail_url" => ["required", "string", "max:255", "url"],

@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->softDeletes(); // делаем пометку - удалено, добавляется поле deleted_at
 
-            $table->unique(['user_id', 'name']);
+            $table->unique(['user_id', 'name']); // двойной ключ для уникальности имени
         });
     }
 
