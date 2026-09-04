@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\PaymentCreationController;
 use App\Http\Controllers\TerminalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,8 @@ Route::prefix('/auth')->as('auth.')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post('/create-payment', PaymentCreationController::class)->name('create-payment');
 
 // Эти роуты вызываются только при наличии токена - работает мидлвар
 Route::middleware(['auth:sanctum'])->group(function () {

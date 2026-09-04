@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Contracts\AuditLogContract;
+use App\Contracts\SignatureContract;
 use App\Services\OwnDBAuditLogService;
+use App\Services\SignatureService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AuditLogContract::class, function ($app) {
             return new OwnDBAuditLogService(); // у одного контракта может быть много реализаций в виде сервисов.
             // Эти сервисы можно менять в зав-ти от ситуации
+        });
+
+        $this->app->singleton(SignatureContract::class, function ($app) {
+            return new SignatureService(); // этот сервис будет заменен моком на время теста
         });
     } // в методе register файла Service Provider связываются абстракции и их конкретные реализации
 
