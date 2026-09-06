@@ -26,7 +26,7 @@ class PaymentProcessingTest extends TestCase
     public function testPaymentSuccess(): void
     {
         \Queue::fake();
-        $payment = Payment::factory()->create(["terminal_id" => $this->terminal->id]);
+        $payment = Payment::factory()->create(["terminal_id" => $this->terminal->id, "status" => Payment::STATUS_PENDING]);
 
         $response = $this->post("/api/payments/{$payment->id}/change-status", [ // id - ключ идемпотентности
             "status" => Payment::STATUS_PAID,
