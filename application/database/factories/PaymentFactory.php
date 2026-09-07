@@ -17,7 +17,7 @@ class PaymentFactory extends Factory
             'order_id' => $this->faker->word(),
             'amount' => $this->faker->randomNumber(),
             'description' => $this->faker->text(),
-            'status' => $this->faker->randomNumber(),
+            'status' => Payment::STATUS_PENDING,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
