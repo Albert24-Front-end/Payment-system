@@ -18,7 +18,7 @@ class TerminalService
     {
     }
 
-    public function createAuditLog(User $creator, TerminalData $terminalData)
+    public function createTerminal(User $creator, TerminalData $terminalData)
     {
         $terminal = new Terminal([
             "name" => $terminalData->name,

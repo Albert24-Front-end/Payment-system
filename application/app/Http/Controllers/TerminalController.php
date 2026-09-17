@@ -19,7 +19,7 @@ class TerminalController extends Controller
 
     public function create(TerminalCreationRequest $request, TerminalService $terminalService)
     {
-        $terminalService->createAuditLog(auth()->user(), $request->toDTO());
+        $terminalService->createTerminal(auth()->user(), $request->toDTO());
         return response()->json(["success" => true], 201);
     }
 

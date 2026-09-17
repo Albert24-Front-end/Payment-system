@@ -5,6 +5,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\PaymentCreationController;
 use App\Http\Controllers\PaymentProcessingController;
 use App\Http\Controllers\TerminalController;
+use App\Http\Controllers\WithdrawalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,4 +43,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('can:viewSecretKey,terminal')
             ->name('secret-key');
     });
+
+    Route::prefix("/withdrawals")
+        ->as("withdrawal.")
+        ->group(function () {
+            Route::post("", [WithdrawalController::class, 'create'])
+                ->middleware(\App\Http\Middleware\IdempotenceMiddleware::class)
+                ->name('create');
+        });
 });
