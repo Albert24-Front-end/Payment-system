@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\PaymentCreationController;
@@ -50,5 +51,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post("", [WithdrawalController::class, 'create'])
                 ->middleware(\App\Http\Middleware\IdempotenceMiddleware::class)
                 ->name('create');
+        });
+
+    Route::prefix("/admin")
+        ->as("admin.")
+        ->group(function () {
+            Route::prefix("/users")->as("users.")->group(function () {
+                Route::get("", [UsersController::class, "usersList"])
+                    ->middleware("can:viewList, App\Models\User")
+                    ->name("usersList");
+            });
         });
 });

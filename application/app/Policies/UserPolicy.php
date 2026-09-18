@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class UserPolicy
+{
+    use HandlesAuthorization;
+    // действие viewList может совершить только юзер, обладающий разрешением users.view
+    // привязываем политику как мидлвар в api.php к конкретному url
+    public function viewList(User $user): bool
+    {
+        return $user->hasPermission("users.view");
+    }
+}
