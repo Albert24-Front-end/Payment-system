@@ -78,4 +78,16 @@ class UsersListViewTest extends TestCase
             ]);
         }
     }
+
+    public function testEmailFilter(): void
+    {
+        $emailPart = explode("@", $this->adminUser->email)[0];
+
+        $response = $this->actingAs($this->adminUser)->get("/api/admin/users?email=" . $emailPart);
+        $response->assertStatus(200);
+
+        $returnedData = $response->json();
+        $this->assertEquals(count($returnedData["data"]), 1);
+        $this->assertEquals($returnedData["data"][0]["email"], $this->adminUser->email);
+    }
 }

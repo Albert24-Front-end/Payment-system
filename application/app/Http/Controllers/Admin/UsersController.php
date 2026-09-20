@@ -11,6 +11,9 @@ class UsersController extends Controller
 {
     public function usersList(UserAdminService $adminService, Request $request)
     {
-        return new UserCollection($adminService->getUserList($request->input("perPage", 10)));
+        return new UserCollection($adminService->getUserList(
+            $request->input("perPage", 10),
+            $request->all(),
+        ));
     }
 }
