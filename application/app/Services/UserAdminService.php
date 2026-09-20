@@ -6,8 +6,8 @@ use App\Models\User;
 
 class UserAdminService
 {
-    public function getUserList()
+    public function getUserList($perPage = 10)
     {
-        return User::orderBy("created_at", "DESC")->get();
+        return User::orderBy("created_at", "DESC")->paginate($perPage);
     }
 }

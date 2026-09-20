@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,16 +20,19 @@ class UsersListViewTest extends TestCase
      */
     private Collection $users;
 
+    private ?CarbonImmutable $now = null; // неизменяемые дата и время - если будет попытка изменения (вычитание минут), создастся новый экземпляр класс Carbon
+
     public function setUp(): void
     {
         parent::setUp();
         $roleAdmin = Role::where("name", "admin")->first();
         $this->assertNotNull($roleAdmin);
-        $this->adminUser = User::factory()->for($roleAdmin)->state(["created_at" => now()])->create();
+        $this->now = CarbonImmutable::now(); // основной экземпляр Carbon - он должен оставаться неизменным
+        $this->adminUser = User::factory()->for($roleAdmin)->state(["created_at" => $this->now])->create();
         $this->users = User::factory()
-            ->state(new Sequence(["created_at" => now()->subMinute()],
-                ["created_at" => now()->subMinutes(2)],
-                ["created_at" => now()->subMinutes(3)]))
+            ->state(new Sequence(["created_at" => $this->now->subMinute()],
+                ["created_at" => $this->now->subMinutes(2)],
+                ["created_at" => $this->now->subMinutes(3)]))
             ->count(3)
             ->create();
         $this->users->prepend($this->adminUser);
@@ -53,5 +57,25 @@ class UsersListViewTest extends TestCase
         $notAdminUser = User::factory()->create();
         $response = $this->actingAs($notAdminUser)->get("/api/admin/users");
         $response->assertStatus(403); // юзер не имеет право на действие
+    }
+
+    public function testGetUsersWithPagination(): void
+    {
+        for ($p = 1; $p <= 2; $p++) {
+            $response = $this->actingAs($this->adminUser)->get("/api/admin/users?perPage=2&page=" . $p);
+            $response->assertStatus(200);
+
+            $data = $this->users->slice(($p - 1) * 2, 2)->map(function($user) {
+                $res = $user->toArray();
+                unset($res["role"]);
+                return $res;
+            })->values()->toArray();
+            $response->assertJson([
+                "data" => $data,
+                "meta" => [
+                    "current_page" => $p,
+                ]
+            ]);
+        }
     }
 }
