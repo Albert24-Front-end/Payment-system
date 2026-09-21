@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
+use App\Models\Terminal;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
@@ -87,7 +88,24 @@ class UsersListViewTest extends TestCase
         $response->assertStatus(200);
 
         $returnedData = $response->json();
-        $this->assertEquals(count($returnedData["data"]), 1);
-        $this->assertEquals($returnedData["data"][0]["email"], $this->adminUser->email);
+        $this->assertCount(1, $returnedData["data"]); // checks that data contains exactly one user
+        $this->assertEquals($this->adminUser->email, $returnedData["data"][0]["email"]); // checks which user was returned
+    }
+
+    public function testTerminalIdFilter(): void
+    {
+        $terminal = Terminal::factory()->state([
+            "user_id" => $this->adminUser->id,
+        ])->create();
+        $response = $this->actingAs($this->adminUser)->get("/api/admin/users?terminal_id=" . $terminal->id);
+        $response->assertStatus(200);
+
+        $returnedData = $response->json();
+        $this->assertCount(1, $returnedData["data"]);
+        $this->assertEquals($this->adminUser->id, $returnedData["data"][0]["id"]);
+
+        $response = $this->actingAs($this->adminUser)->get("/api/admin/users?terminal_id=" . ($terminal->id + 1000));
+        $response->assertStatus(200);
+        $this->assertCount(0, $response->json("data"));
     }
 }

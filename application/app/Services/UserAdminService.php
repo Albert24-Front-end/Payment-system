@@ -10,7 +10,8 @@ class UserAdminService
     public function getUserList($perPage = 10, array $filters = [])
     {
         return User::orderBy("created_at", "DESC")
-            ->when($filters["email"] ?? null, fn(Builder$query, $email) => $query->whereLike("email", "%{$email}%"))
+            ->when($filters["email"] ?? null, fn(Builder $query, $email) => $query->whereLike("email", "%{$email}%"))
+            ->when($filters["terminal_id"] ?? null, fn(Builder $query, $terminal_id) => $query->hasTerminal($terminal_id))
             ->paginate($perPage);
     }
 }

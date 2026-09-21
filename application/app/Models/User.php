@@ -6,8 +6,11 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
@@ -45,6 +48,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function terminals(): hasMany
+    {
+        return $this->hasMany(Terminal::class);
+    }
+
     public function hasPermission(string $permissionName): bool
     {
         // в этот момент Laravel запрашивает у БД сначала роль, затем разрешения
@@ -53,5 +61,15 @@ class User extends Authenticatable
         ) ?? collect([]);
 
         return $permissions->contains($permissionName);
+    }
+
+    #[Scope]
+    protected function hasTerminal(Builder $query, int $terminalId): void
+    {
+        $query->select("users.*")->join("terminals", "terminals.user_id", "=", "users.id")
+        ->where("terminals.id", "=", $terminalId);
+
+        // $query->whereHas("terminals", fn($query) => $query->where("id", $terminalId)); // без join, но с подзапросом - иногда это медленнее - подзапрос делается для каждого юзера
+        // select * from users where exists (select * from terminals where terminals.user_id = users.id and terminals.id = $terminalId)
     }
 }
