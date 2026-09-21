@@ -108,4 +108,25 @@ class UsersListViewTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(0, $response->json("data"));
     }
+
+    public function testTerminalNameFilter(): void
+    {
+        $terminal = Terminal::factory()->state([
+            "user_id" => $this->adminUser->id,
+        ])->create();
+        $response = $this->actingAs($this->adminUser)->get("/api/admin/users?terminal_name=" . $terminal->name);
+        $response->assertStatus(200);
+
+        $returnedData = $response->json();
+        $this->assertCount(1, $returnedData["data"]);
+        $this->assertEquals($this->adminUser->id, $returnedData["data"][0]["id"]);
+
+        $response = $this->actingAs($this->adminUser)->get(
+            "/api/admin/users?" . http_build_query([
+                "terminal_name" => $terminal->name . "smth",
+            ])
+        );
+        $response->assertStatus(200);
+        $this->assertCount(0, $response->json("data"));
+    }
 }

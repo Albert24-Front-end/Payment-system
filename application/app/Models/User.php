@@ -72,4 +72,14 @@ class User extends Authenticatable
         // $query->whereHas("terminals", fn($query) => $query->where("id", $terminalId)); // без join, но с подзапросом - иногда это медленнее - подзапрос делается для каждого юзера
         // select * from users where exists (select * from terminals where terminals.user_id = users.id and terminals.id = $terminalId)
     }
+
+    #[Scope]
+    protected function hasTerminalWithName(Builder $query, string $terminalName): void
+    {
+        $query->select("users.*")->join("terminals", "terminals.user_id", "=", "users.id")
+            ->where("terminals.name", "=", $terminalName);
+
+        // $query->whereHas("terminals", fn($query) => $query->where("name", $terminalName)); // без join, но с подзапросом - иногда это медленнее - подзапрос делается для каждого юзера
+        // select * from users where exists (select * from terminals where terminals.user_id = users.id and terminals.name = $terminalName)
+    }
 }
