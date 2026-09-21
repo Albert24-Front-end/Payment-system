@@ -129,4 +129,19 @@ class UsersListViewTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(0, $response->json("data"));
     }
+
+    public function testUserRegDateFilter(): void
+    {
+        $requestFromDate = $this->now->subMinutes(2);
+        $response = $this->actingAs($this->adminUser)->get("/api/admin/users?created_from=" . $requestFromDate);
+        $response->assertStatus(200);
+
+        $data = $this->users->slice(0, 3)->map(function($user) {
+            $res = $user->toArray();
+            unset($res["role"]);
+            return $res;
+        })->values()->toArray();
+        $this->assertCount(3, $response->json("data"));
+        $response->assertJson(["data" => $data]);
+    }
 }
