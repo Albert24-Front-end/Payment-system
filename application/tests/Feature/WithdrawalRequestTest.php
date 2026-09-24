@@ -70,6 +70,8 @@ class WithdrawalRequestTest extends TestCase
             "amount" => 0,
             "bank_code" => "",
             "account_number" => ""
+        ], [
+            "Idempotence-Key" => \Str::uuid(),
         ]);
 
         $response->assertStatus(422);
@@ -83,7 +85,9 @@ class WithdrawalRequestTest extends TestCase
         unset($payload["terminal_id"]);
 
         $this->actingAs($this->user)
-            ->postJson("/api/withdrawals", $payload)
+            ->postJson("/api/withdrawals", $payload, [
+                "Idempotence-Key" => \Str::uuid(),
+            ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(["terminal_id"]);
 
@@ -96,7 +100,9 @@ class WithdrawalRequestTest extends TestCase
         $payload["terminal_id"] = 999999;
 
         $this->actingAs($this->user)
-            ->postJson("/api/withdrawals", $payload)
+            ->postJson("/api/withdrawals", $payload, [
+                "Idempotence-Key" => \Str::uuid(),
+            ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(["terminal_id"]);
 
@@ -114,7 +120,9 @@ class WithdrawalRequestTest extends TestCase
         $payload["terminal_id"] = $anotherTerminal->id;
 
         $this->actingAs($this->user)
-            ->postJson("/api/withdrawals", $payload)
+            ->postJson("/api/withdrawals", $payload, [
+                "Idempotence-Key" => \Str::uuid(),
+            ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(["terminal_id"]);
 
@@ -129,6 +137,8 @@ class WithdrawalRequestTest extends TestCase
                 "amount" => "not-an-integer",
                 "bank_code" => [],
                 "account_number" => [],
+            ], [
+                "Idempotence-Key" => \Str::uuid(),
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([

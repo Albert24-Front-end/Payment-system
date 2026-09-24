@@ -18,7 +18,7 @@ class TerminalFactory extends Factory
             'success_url' => $this->faker->url(),
             'fail_url' => $this->faker->url(),
             'webhook_url' => $this->faker->url(),
-            'secret_key' => $this->faker->word(),
+            'secret_key' => $this->faker->unique()->word(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\HealthController;
@@ -60,10 +61,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 Route::get("", [UsersController::class, "usersList"])
                     ->middleware("can:viewList, App\Models\User")
                     ->name("usersList");
+
+                Route::post("/{userToBan}/ban", [UsersController::class, "ban"])
+                    ->middleware('can:banUser,userToBan')
+                    ->name("ban");
             });
 
-            Route::post("/{userToBan}/ban", [UsersController::class, "ban"])
-                ->middleware('can:banUser,userToBan')
-                ->name("ban");
+            Route::prefix("/payments")->as("payments.")->group(function () {
+                Route::get("", [PaymentsController::class, "getList"])
+                    ->name("get-list");
+            });
         });
 });
