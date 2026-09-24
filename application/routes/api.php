@@ -61,5 +61,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
                     ->middleware("can:viewList, App\Models\User")
                     ->name("usersList");
             });
+
+            Route::post("/{userToBan}/ban", [UsersController::class, "ban"])
+                ->middleware('can:banUser,userToBan')
+                ->name("ban");
         });
 });

@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Contracts\AuditLogContract;
 use App\Models\User;
 use App\Services\Assistants\UserFilters\UserFilterApplier;
 use Illuminate\Database\Eloquent\Builder;
 
 class UserAdminService
 {
+    public function __construct(readonly private AuditLogContract $auditLog)
+    {
+
+    }
     public function getUserList($perPage = 10, array $filters = [])
     {
         $query = User::query()->orderBy("users.created_at", "DESC");
@@ -21,5 +26,12 @@ class UserAdminService
             // уже очень много запросов в сервисе
             ->paginate($perPage);
         */
+    }
+
+    public function banUser(User $admin, User $userToBan): void
+    {
+        $userToBan->status = User::STATUS_BANNED;
+        $userToBan->save();
+        $this->auditLog->log("user-ban", $userToBan->id, $admin->id, null);
     }
 }
