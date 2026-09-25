@@ -7,6 +7,11 @@ use App\Models\User;
 
 class TerminalPolicy
 {
+    public function viewStatistics(User $user, Terminal $terminal): bool
+    {
+        return $user->status !== User::STATUS_BANNED && $user->id === $terminal->user_id;
+    }
+
     /**
      * Create a new policy instance.
      */

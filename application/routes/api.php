@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\PaymentsController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\PaymentCreationController;
 use App\Http\Controllers\PaymentProcessingController;
 use App\Http\Controllers\TerminalController;
+use App\Http\Controllers\TerminalStatisticsController;
 use App\Http\Controllers\WithdrawalController;
+use App\Http\Middleware\BlockBannedUserMiddleware;
+use App\Http\Middleware\IdempotenceMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,47 +33,56 @@ Route::post('/payments/{paymentId}/change-status', PaymentProcessingController::
 // Эти роуты вызываются только при наличии токена - работает мидлвар
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('/terminals')->as('terminal.')->group(function () {
-        Route::get("", [TerminalController::class, 'index'])->name('index');
+        Route::get('/{terminal}/statistics', TerminalStatisticsController::class)
+            ->withTrashed()
+            ->middleware([BlockBannedUserMiddleware::class, 'can:viewStatistics,terminal'])
+            ->name('statistics');
 
-        Route::post("", [TerminalController::class, 'create'])->name('create');
+        Route::get('', [TerminalController::class, 'index'])->name('index');
 
-        Route::put("/{terminal}", [TerminalController::class, 'update'])
-            ->middleware("can:update,terminal") // проверка права редактирования кассы
+        Route::post('', [TerminalController::class, 'create'])->name('create');
+
+        Route::put('/{terminal}', [TerminalController::class, 'update'])
+            ->middleware('can:update,terminal') // проверка права редактирования кассы
             ->name('update');
 
-        Route::delete("/{terminal}", [TerminalController::class, 'delete'])
-            ->middleware("can:delete,terminal") // проверка права удаления кассы
+        Route::delete('/{terminal}', [TerminalController::class, 'delete'])
+            ->middleware('can:delete,terminal') // проверка права удаления кассы
             ->name('delete');
 
-        Route::get("/{terminal}/secret_key", [TerminalController::class, 'getSecretKey'])
+        Route::get('/{terminal}/secret_key', [TerminalController::class, 'getSecretKey'])
             ->middleware('can:viewSecretKey,terminal')
             ->name('secret-key');
     });
 
-    Route::prefix("/withdrawals")
-        ->as("withdrawal.")
+    Route::prefix('/withdrawals')
+        ->as('withdrawal.')
         ->group(function () {
-            Route::post("", [WithdrawalController::class, 'create'])
-                ->middleware(\App\Http\Middleware\IdempotenceMiddleware::class)
+            Route::post('', [WithdrawalController::class, 'create'])
+                ->middleware(IdempotenceMiddleware::class)
                 ->name('create');
         });
 
-    Route::prefix("/admin")
-        ->as("admin.")
+    Route::prefix('/admin')
+        ->as('admin.')
         ->group(function () {
-            Route::prefix("/users")->as("users.")->group(function () {
-                Route::get("", [UsersController::class, "usersList"])
-                    ->middleware("can:viewList, App\Models\User")
-                    ->name("usersList");
+            Route::get('/statistics', StatisticsController::class)
+                ->middleware([BlockBannedUserMiddleware::class, 'can:viewStatistics,App\Models\User'])
+                ->name('statistics');
 
-                Route::post("/{userToBan}/ban", [UsersController::class, "ban"])
+            Route::prefix('/users')->as('users.')->group(function () {
+                Route::get('', [UsersController::class, 'usersList'])
+                    ->middleware("can:viewList, App\Models\User")
+                    ->name('usersList');
+
+                Route::post('/{userToBan}/ban', [UsersController::class, 'ban'])
                     ->middleware('can:banUser,userToBan')
-                    ->name("ban");
+                    ->name('ban');
             });
 
-            Route::prefix("/payments")->as("payments.")->group(function () {
-                Route::get("", [PaymentsController::class, "getList"])
-                    ->name("get-list");
+            Route::prefix('/payments')->as('payments.')->group(function () {
+                Route::get('', [PaymentsController::class, 'getList'])
+                    ->name('get-list');
             });
         });
 });
